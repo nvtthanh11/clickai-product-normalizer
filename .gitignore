@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Excel temporary files & local processed output
+~$*
+Processed_*.xlsx
+ClickAI_Product_Processed.xlsx
+
+# OS
+.DS_Store
+Thumbs.db

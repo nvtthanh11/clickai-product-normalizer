@@ -1,0 +1,82 @@
+name: Map Products to ClickAI Standard
+
+on:
+  # Cho phép chạy thủ công từ tab Actions trên GitHub
+  workflow_dispatch:
+    inputs:
+      input_file:
+        description: 'Tên file sản phẩm đầu vào (ví dụ: products.xlsx hoặc data.csv). Để trống sẽ tự tìm file trong repo.'
+        required: false
+        default: ''
+        type: string
+
+  # Tự động chạy khi push file dữ liệu hoặc code mới lên branch main/master
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '*.xlsx'
+      - '*.xls'
+      - '*.csv'
+      - '*.xml'
+      - '*.json'
+      - '*.tsv'
+      - '*.txt'
+      - 'product_mapper_local.py'
+      - 'requirements.txt'
+      - '.github/workflows/map_products.yml'
+
+jobs:
+  map-products:
+    name: Chuẩn hóa dữ liệu sản phẩm ClickAI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: 2. Thiết lập môi trường Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+
+      - name: 3. Cài đặt các thư viện phụ thuộc
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install pandas openpyxl
+          fi
+
+      - name: 4. Chạy script chuẩn hóa sản phẩm (ClickAI Mapper)
+        run: |
+          INPUT_PARAM="${{ github.event.inputs.input_file }}"
+          if [ -n "$INPUT_PARAM" ]; then
+            echo "[*] Chạy script với file chỉ định: $INPUT_PARAM"
+            python product_mapper_local.py --input "$INPUT_PARAM"
+          else
+            echo "[*] Tự động dò tìm file dữ liệu sản phẩm trong thư mục..."
+            python product_mapper_local.py
+          fi
+
+      - name: 5. Kiểm tra file kết quả đầu ra
+        run: |
+          if [ ! -f "ClickAI_Product_Processed.xlsx" ]; then
+            echo "::error::Không tìm thấy file kết quả ClickAI_Product_Processed.xlsx!"
+            exit 1
+          fi
+          echo "File ClickAI_Product_Processed.xlsx đã được tạo thành công!"
+          ls -lh ClickAI_Product_Processed.xlsx
+
+      - name: 6. Đưa file kết quả lên GitHub Artifacts để tải về
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClickAI_Product_Processed_${{ github.run_number }}
+          path: ClickAI_Product_Processed.xlsx
+          if-no-files-found: error
+          retention-days: 30

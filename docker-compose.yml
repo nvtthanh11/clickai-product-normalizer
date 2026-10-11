@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  clickai-product-mapper:
+    build: .
+    container_name: clickai_product_mapper
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - RETENTION_SECONDS=7200
+      # Nếu server có domain hoặc IP cố định, IT có thể điền vào đây:
+      # - BASE_URL=https://mapper.clickai.vn
+    volumes:
+      - /tmp/clickai_jobs:/tmp/clickai_jobs
