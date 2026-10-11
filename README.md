@@ -33,10 +33,13 @@ Script sẽ tự động nhận diện và sắp xếp dữ liệu vào đúng 1
 ├── .github/
 │   └── workflows/
 │       └── map_products.yml       # Quy trình GitHub Actions tự động
-├── product_mapper_local.py        # Script Python chuẩn hóa chính
-├── requirements.txt               # Thư viện phụ thuộc (pandas, openpyxl)
+├── product_mapper_local.py        # Script Python chuẩn hóa đa năng (Excel, CSV, XML, JSON)
+├── main.py                        # FastAPI Web Service kết nối ClickAI Workflow
+├── Dockerfile & docker-compose    # Đóng gói triển khai IT Server riêng
+├── requirements.txt               # Thư viện phụ thuộc
 ├── .gitignore                     # Bỏ qua file rác / file kết quả tạm
-└── sample_products.csv            # File dữ liệu mẫu thử nghiệm
+├── sample_products.csv            # File dữ liệu mẫu CSV
+└── Báo cáo tồn khả dụng theo kho.xml # File dữ liệu mẫu XML MISA/ERP
 ```
 
 ---
