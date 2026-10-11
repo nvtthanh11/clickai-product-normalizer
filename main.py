@@ -23,7 +23,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 
-from product_mapper_local import process_product_file
+import re
+from product_mapper_local import process_product_file, remove_accents
 
 app = FastAPI(
     title="ClickAI Product Normalizer API",
@@ -238,7 +239,13 @@ async def convert_and_return_file(
         else:
             raise HTTPException(status_code=400, detail="Vui lòng cung cấp file_url qua JSON hoặc upload file đính kèm!")
 
-        output_filename = "ClickAI_Product_Processed.xlsx"
+        # Tạo tên file đẹp theo tên file gốc của khách hàng (VD: Processed_Bao_cao_ton_kha_dung.xlsx)
+        orig_stem = input_path.stem
+        clean_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', remove_accents(orig_stem)).strip('_')
+        if not clean_stem or clean_stem.lower() in ["input_products", "file", "tmp"]:
+            clean_stem = "ClickAI_Product"
+        output_filename = f"Processed_{clean_stem}.xlsx"
+
         output_path = job_dir / output_filename
         result_path = process_product_file(input_path, output_path)
 
@@ -246,7 +253,9 @@ async def convert_and_return_file(
             path=result_path,
             filename=output_filename,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename={output_filename}"}
+            headers={
+                "Content-Disposition": f'attachment; filename="{output_filename}"; filename*=UTF-8\'\'{output_filename}'
+            }
         )
     except HTTPException:
         raise
