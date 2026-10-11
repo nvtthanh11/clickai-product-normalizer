@@ -1040,10 +1040,8 @@ def save_to_formatted_excel(df: pd.DataFrame, output_path: Path):
     center_align_cols = {"Đơn vị tính", "Tiền tệ", "Chu kỳ thanh toán", "Xuất xứ", "Mã SKU"}
 
     total_rows = ws.max_row
-    # Tối ưu hóa hiệu năng: Với file lớn (> 10,000 dòng), chỉ áp dụng border & zebra cho 2,000 dòng đầu để tránh tràn RAM và chậm
-    format_limit_rows = min(total_rows, 2000) if total_rows > 10000 else total_rows
-    if total_rows > 10000:
-        print(f"[*] File lớn ({total_rows} dòng): Kích hoạt chế độ tối ưu hóa hiệu năng.")
+    # Tối ưu hóa hiệu năng: Định dạng border & font cho tối đa 300 dòng đầu để đảm bảo tốc độ phản hồi < 1 giây trên Cloud
+    format_limit_rows = min(total_rows, 300)
 
     for row_idx in range(2, format_limit_rows + 1):
         ws.row_dimensions[row_idx].height = 20
