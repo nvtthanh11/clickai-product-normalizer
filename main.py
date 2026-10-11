@@ -154,6 +154,15 @@ async def convert_file(
 
         result_path = process_product_file(input_path, output_path)
 
+        # Nếu có tham số return_file=true hoặc gọi /api/convert-file: Trả trực tiếp file Excel
+        if request.query_params.get("return_file") == "true":
+            return FileResponse(
+                path=result_path,
+                filename=output_filename,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={output_filename}"}
+            )
+
         base_url = get_base_url(request)
         download_url = f"{base_url}/api/download/{job_id}"
 
@@ -180,6 +189,71 @@ async def convert_file(
                 "error_type": "DataValidationError"
             }
         )
+    except Exception as e:
+        print(f"[LỖI XỬ LÝ]: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Lỗi hệ thống trong quá trình xử lý: {str(e)}",
+                "error_type": "InternalServerError"
+            }
+        )
+
+
+@app.post("/api/convert-file")
+async def convert_and_return_file(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    payload: Optional[ConvertUrlRequest] = None,
+    file: Optional[UploadFile] = File(None)
+):
+    """
+    Endpoint chuẩn hóa và trả về TRỰC TIẾP file Excel (.xlsx) trong response.
+    Dành riêng cho Click AI Workflow bắt lấy biến `files: Array[File]`.
+    """
+    background_tasks.add_task(cleanup_old_jobs)
+    job_id = str(uuid.uuid4())[:12]
+    job_dir = STORAGE_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    input_path = None
+    try:
+        if payload and payload.file_url:
+            file_url = payload.file_url.strip()
+            parsed_url = urllib.parse.urlparse(file_url)
+            url_filename = os.path.basename(parsed_url.path) or "input_products.xlsx"
+            input_path = job_dir / url_filename
+            response = requests.get(file_url, stream=True, timeout=30)
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail=f"Không thể tải file từ URL: {response.status_code}")
+            with open(input_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        elif file:
+            filename = file.filename or "input_products.xlsx"
+            input_path = job_dir / filename
+            with open(input_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        else:
+            raise HTTPException(status_code=400, detail="Vui lòng cung cấp file_url qua JSON hoặc upload file đính kèm!")
+
+        output_filename = "ClickAI_Product_Processed.xlsx"
+        output_path = job_dir / output_filename
+        result_path = process_product_file(input_path, output_path)
+
+        return FileResponse(
+            path=result_path,
+            filename=output_filename,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={output_filename}"}
+        )
+    except HTTPException:
+        raise
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi chuẩn hóa file: {str(e)}")
     except Exception as e:
         print(f"[LỖI XỬ LÝ]: {e}")
         return JSONResponse(
