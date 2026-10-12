@@ -241,12 +241,18 @@ async def convert_and_return_file(
         else:
             raise HTTPException(status_code=400, detail="Vui lòng cung cấp file_url qua JSON hoặc upload file đính kèm!")
 
-        # Tạo tên file đẹp theo tên file gốc của khách hàng (VD: Processed_Bao_cao_ton_kha_dung.xlsx)
-        orig_stem = input_path.stem
+        # Ưu tiên lấy tên đẹp từ query param ?filename=... hoặc tên gốc của file
+        raw_name = request.query_params.get("filename") or (file.filename if file else "")
+        orig_stem = Path(raw_name).stem if raw_name else input_path.stem
         clean_stem = re.sub(r'[^a-zA-Z0-9_\-]', '_', remove_accents(orig_stem)).strip('_')
-        if not clean_stem or clean_stem.lower() in ["input_products", "file", "tmp"]:
-            clean_stem = "ClickAI_Product"
-        output_filename = f"Processed_{clean_stem}.xlsx"
+
+        # Nhận diện nếu tên file là chuỗi mã băm hex vô nghĩa (như UUID 32 ký tự 206fae7bf1... của Dify):
+        is_hex_hash = len(clean_stem) >= 20 and all(c in '0123456789abcdefABCDEF_-' for c in clean_stem)
+
+        if not clean_stem or is_hex_hash or clean_stem.lower() in ["input_products", "file", "tmp", "blob"]:
+            output_filename = "ClickAI_Product_Processed.xlsx"
+        else:
+            output_filename = f"Processed_{clean_stem}.xlsx"
 
         output_path = job_dir / output_filename
         result_path = process_product_file(input_path, output_path)
