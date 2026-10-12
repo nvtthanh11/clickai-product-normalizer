@@ -76,6 +76,8 @@ def get_base_url(request: Request) -> str:
 
 
 @app.get("/")
+@app.get("/health")
+@app.get("/api/v1/health")
 def health_check():
     """Kiểm tra trạng thái server."""
     return {
@@ -262,17 +264,8 @@ async def convert_and_return_file(
     except ValueError as ve:
         raise HTTPException(status_code=422, detail=str(ve))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi chuẩn hóa file: {str(e)}")
-    except Exception as e:
         print(f"[LỖI XỬ LÝ]: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "error": f"Lỗi hệ thống trong quá trình xử lý: {str(e)}",
-                "error_type": "InternalServerError"
-            }
-        )
+        raise HTTPException(status_code=500, detail=f"Lỗi chuẩn hóa file: {str(e)}")
 
 
 @app.get("/api/download/{job_id}")

@@ -1,0 +1,35 @@
+@Library('pipeline-library') _
+
+// Pipeline for ClickAI Product Normalizer using standard pipeline-library
+buildAndDeploy(
+    // === REQUIRED PARAMETERS ===
+    environment: 'dev',
+    skipConfirmation: true,
+    appName: 'product-normalizer',
+    repo: 'https://github.com/nvtthanh11/clickai-product-normalizer.git',
+    branch: 'main',
+    credentialsId: 'github-pat',
+    registry: 'localhost:5000/clickai',
+    kubeconfigPath: '/var/jenkins_home/.kube/config',
+    dockerCredentialsId: 'docker-registry-credentials',
+
+    // === OPTIONAL PARAMETERS ===
+    dockerfile: './Dockerfile',
+    buildContext: '.',
+    platform: 'linux/amd64',
+
+    // Kubernetes deployment
+    deployment: 'clickai-product-normalizer',
+    namespace: 'dev',
+    kubeContext: 'dev',
+    containerName: 'product-normalizer',
+
+    // Deployment options
+    setImage: true,
+    waitForRollout: true,
+    rolloutTimeout: '5m',
+
+    // Cleanup
+    cleanupImages: true
+)
+

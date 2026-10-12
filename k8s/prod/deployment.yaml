@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickai-prod-product-normalizer
+  namespace: prod
+  labels:
+    app: clickai-prod-product-normalizer
+    app.kubernetes.io/name: product-normalizer
+    app.kubernetes.io/instance: clickai-prod
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: clickai-prod-product-normalizer
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: clickai-prod-product-normalizer
+        app.kubernetes.io/name: product-normalizer
+        app.kubernetes.io/instance: clickai-prod
+    spec:
+      containers:
+        - name: product-normalizer
+          image: k8s.io.reg.vnetwork.dev/clickai/product-normalizer-prod:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: clickai-prod-product-normalizer
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          volumeMounts:
+            - name: scratch-storage
+              mountPath: /tmp/clickai_jobs
+      volumes:
+        - name: scratch-storage
+          emptyDir: {}
+      imagePullSecrets:
+        - name: regcred
+

@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: clickai-product-normalizer
+  namespace: dev
+  labels:
+    app: clickai-product-normalizer
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+spec:
+  rules:
+    - host: normalizer-dev.clickai.vn
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: clickai-product-normalizer
+                port:
+                  number: 8000
+

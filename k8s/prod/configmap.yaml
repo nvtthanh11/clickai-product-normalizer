@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickai-prod-product-normalizer
+  namespace: prod
+  labels:
+    app: clickai-prod-product-normalizer
+    app.kubernetes.io/name: product-normalizer
+    app.kubernetes.io/instance: clickai-prod
+data:
+  PORT: "8000"
+  STORAGE_DIR: "/tmp/clickai_jobs"
+  RETENTION_SECONDS: "7200"
+  BASE_URL: "http://clickai-prod-product-normalizer.prod.svc.cluster.local:8000"
+

@@ -1,0 +1,58 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1549.vc8d7f497b_22f">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2265.v140e610fe9d5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2265.v140e610fe9d5">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>Pipeline for ClickAI Product Normalizer - PROD environment using pipeline-library</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@4183.v94b_6fd39da_c1">
+    <script>@Library(&apos;pipeline-library&apos;) _
+
+// Pipeline for ClickAI Product Normalizer - PROD environment
+
+buildAndDeploy(
+    // === REQUIRED PARAMETERS ===
+    environment: &apos;prod&apos;,
+    skipConfirmation: true,
+    appName: &apos;product-normalizer&apos;,
+    repo: &apos;https://github.com/nvtthanh11/clickai-product-normalizer.git&apos;,
+    branch: &apos;main&apos;,
+    credentialsId: &apos;github-pat&apos;,
+    registry: &apos;k8s.io.reg.vnetwork.dev/clickai&apos;,
+    kubeconfigPath: &apos;/var/jenkins_home/.kube/config&apos;,
+    dockerCredentialsId: &apos;docker-registry-credentials&apos;,
+
+    // === OPTIONAL PARAMETERS ===
+    // Docker build configuration
+    dockerfile: &apos;./Dockerfile&apos;,
+    buildContext: &apos;.&apos;,
+    platform: &apos;linux/amd64&apos;,
+
+    // Kubernetes deployment configuration (PROD)
+    deployment: &apos;clickai-prod-product-normalizer&apos;,
+    namespace: &apos;prod&apos;,
+    kubeContext: &apos;prod&apos;,
+    containerName: &apos;product-normalizer&apos;,
+
+    // Deployment options
+    setImage: true,
+    waitForRollout: true,
+    rolloutTimeout: &apos;5m&apos;,
+
+    // Cleanup
+    cleanupImages: true
+)
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
+

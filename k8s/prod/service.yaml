@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickai-prod-product-normalizer
+  namespace: prod
+  labels:
+    app: clickai-prod-product-normalizer
+    app.kubernetes.io/name: product-normalizer
+    app.kubernetes.io/instance: clickai-prod
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: clickai-prod-product-normalizer
+
