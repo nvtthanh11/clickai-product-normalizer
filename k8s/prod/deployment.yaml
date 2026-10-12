@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: product-normalizer
-          image: k8s.io.reg.vnetwork.dev/clickai/product-normalizer-prod:latest
+          image: k8s.io.reg.vnetwork.dev/clickai/product-normalizer-prod:v1.0.2
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -64,7 +64,8 @@ spec:
               mountPath: /tmp/clickai_jobs
       volumes:
         - name: scratch-storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: clickai-prod-product-normalizer-storage
       imagePullSecrets:
         - name: regcred
 

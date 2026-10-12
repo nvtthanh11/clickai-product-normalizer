@@ -11,5 +11,5 @@ data:
   PORT: "8000"
   STORAGE_DIR: "/tmp/clickai_jobs"
   RETENTION_SECONDS: "7200"
-  BASE_URL: "http://clickai-prod-product-normalizer.prod.svc.cluster.local:8000"
+  BASE_URL: "http://mapper.clickai.vn"
 
